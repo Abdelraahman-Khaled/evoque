@@ -32,13 +32,13 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
-# Install prisma CLI globally or just use local version if available
-# Since we are in standalone, we might need a minimal prisma CLI
-RUN npm install -g prisma@5.22.0
+# Also copy the prisma engines and client files that might be missing in standalone
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Expose the port
 ENV PORT=9199
 EXPOSE 9199
 
 # Start the application
-CMD ["sh", "-c", "prisma db push && node server.js"]
+CMD ["sh", "-c", "npx prisma db push && node server.js"]
