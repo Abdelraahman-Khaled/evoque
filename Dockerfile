@@ -21,19 +21,21 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install openssl and libc6-compat for Prisma
+RUN apk add --no-cache openssl libc6-compat
+
 # Create a data directory for the SQLite database
 RUN mkdir -p /app/prisma/data
 
-COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
 # Expose the port
+ENV PORT=9199
 EXPOSE 9199
 
 # Start the application
 # We use a shell script or multiple commands to ensure migrations run if needed
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+CMD ["sh", "-c", "npx prisma db push && node server.js"]
